@@ -32,6 +32,7 @@ public class SimplexWetzel {
 	
 	}
 	
+	
 	private void fillFieldsWithCoefficients() {
 		
 		table.cells[0][0].topSubcell.setValue(of.getFreeElement());

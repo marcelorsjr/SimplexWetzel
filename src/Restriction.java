@@ -1,4 +1,8 @@
 
+
+import java.util.Arrays;
+
+
 public class Restriction {
     
     public enum Type {
@@ -12,15 +16,11 @@ public class Restriction {
 	private Type type;
 	private int size;
 	
-	public Restriction(String typedInequation, int size) {
+	public Restriction(String typedInequation, int size) throws Exception {
 		this.typedInequation = typedInequation;
 		this.size = size;
-		try {
-			setCoefficientsFromTypedInequation();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		setCoefficientsFromTypedInequation();
+
 		setExpressionSignals();
 		handleRestrictionToSimplex();
 	}
@@ -39,35 +39,41 @@ public class Restriction {
 		String function = equivalentEquation.replace(" ", "");
 		String[] allCoefficients = function.split("(\\-)|(\\+)|(=)");
 		coefficients = new double[size];
-		freeElement = Double.parseDouble(allCoefficients[allCoefficients.length-1]);
-		int xCount = 1;
-		for (int i = 0; i < coefficients.length; i++) {
+		freeElement = 0;
+
+		Arrays.fill(coefficients, 0);
+		
+		for (int i = 0; i < allCoefficients.length; i++) {
 			String[] portions = allCoefficients[i].split("(x)|(X)");
 			
-			if (allCoefficients[i].toLowerCase().equals("x")) {
-				break;
-			}
-			
-			if (portions.length > 1) {
-				if (allCoefficients.length == 1) {
+			try {
+
+				freeElement += Double.parseDouble(allCoefficients[i]);
+				System.out.println(allCoefficients[i]);
+				System.out.println(freeElement);
+			} catch(NumberFormatException e) {
+				if (allCoefficients[i].toLowerCase().equals("x")) {
+					continue;
+				}
+				
+				if (portions.length > 1) {
+					if (allCoefficients.length == 1) {
+						throw new Exception("WRONG EXPRESSION FORMAT");
+					}
+				} else {
 					throw new Exception("WRONG EXPRESSION FORMAT");
 				}
-			}
 
-			if (portions[1].equals(String.valueOf(xCount)) == false) {
-				xCount++;
-				coefficients[xCount-1] = 0;
-				i--;
-				continue;
+				if (portions[0].equals("")) {
+					coefficients[Integer.valueOf(portions[1])-1] += 1;
+
+				} else {
+					coefficients[Integer.valueOf(portions[1])-1] += Double.parseDouble(portions[0]);
+				}
+
 			}
 			
-			if (portions[0].equals("")) {
-				coefficients[xCount-1] = 1;
-			} else {
-				coefficients[xCount-1] = Double.parseDouble(portions[0]);
-			}
 			
-			xCount++;
 		}
 
 	}

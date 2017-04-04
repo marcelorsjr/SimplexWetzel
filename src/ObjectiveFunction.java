@@ -1,4 +1,5 @@
 
+
 public class ObjectiveFunction {
     
     public enum Type {
