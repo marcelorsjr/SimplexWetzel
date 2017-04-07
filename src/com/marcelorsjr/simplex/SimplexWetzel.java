@@ -8,8 +8,16 @@ import java.util.stream.DoubleStream;
 import com.marcelorsjr.simplex.ObjectiveFunction.Type;
 
 
+/**
+ * @author marcelorsjr
+ *
+ */
 public class SimplexWetzel {
 	
+	
+	/**
+	 * Possible solutions that cam be shown
+	 */
 	public enum SolutionResponse {
 		OPTIMAL_SOLUTION, UNLIMITED_SOLUTION, PERMISSIVE_SOLUTION_DOES_NOT_EXIST
 	}
@@ -52,10 +60,6 @@ public class SimplexWetzel {
 	public double[] solve() {
 		fillFieldsWithCoefficients();
 		firstPhase();
-		
-		table.showTable();
-		table.showBasic();
-		table.showNoBasic();
 
 		double results[] = getResultsForObjectiveFunction();
 		double response[] = new double[results.length + 1];
@@ -69,15 +73,21 @@ public class SimplexWetzel {
 	
 	void fillFieldsWithCoefficients() {
 		
+		//Fill the table with the objective function free element  
 		table.cells[0][0].topSubcell.setValue(of.getFreeElement());
-		for (int i = 1; i < table.cells.length; i++) {
-			table.cells[i][0].topSubcell.setValue(restrictions[i-1].getFreeElement());
-		}
 		
+		//Fill the table with the other objective function coefficients
 		for (int j = 0; j < of.getCoefficients().length; j++) {
 			table.cells[0][j+1].topSubcell.setValue(of.getCoefficients()[j]);
 		}
 		
+		//Fill the table with the restrictions free elements 
+		for (int i = 1; i < table.cells.length; i++) {
+			table.cells[i][0].topSubcell.setValue(restrictions[i-1].getFreeElement());
+		}
+		
+
+		//Fill the table with the restrictions coefficients
 		for (int i = 1; i <= restrictions.length; i++) {
 			for (int j = 1; j <= restrictions[0].getCoefficients().length; j++) {
 				table.cells[i][j].topSubcell.setValue(restrictions[i-1].getCoefficients()[j-1]);
@@ -86,9 +96,14 @@ public class SimplexWetzel {
 	}
 	
 	SolutionResponse firstPhase() {
+		
+		//Start sear
 		int col = 1;
 		int row = 1;
 		
+		//Search for the negative element in the free elements row
+		//And then, searching the negative element in the cols
+		//This structure is to guarantee that we will not pick a row without negative elements in the col, if another one exists
 		while (row < table.cells.length && col < table.cells[0].length) {
 			if (table.cells[row][0].topSubcell.getValue() < 0) {
 				if (table.cells[row][col].topSubcell.getValue() < 0) {
@@ -104,23 +119,27 @@ public class SimplexWetzel {
 		
 		}
 		
-
 		
+		
+		//If the negative free element do not exist in the rows, go to the second phase
 		if (row == table.cells.length) {
 			return secondPhase();
 		} else {
 			
+			//If the negative free element do not exist in the cols, the permissive solution does not exist
 			if (col == table.cells[row].length) {
 				System.out.println("Solução permissiva não existe.");
 				solutionResponse = SolutionResponse.PERMISSIVE_SOLUTION_DOES_NOT_EXIST;
 				return SolutionResponse.PERMISSIVE_SOLUTION_DOES_NOT_EXIST;
 			}
 			
+			//Set the selected col
 			table.selectedCol = col;
 			
 			double division = 0;
 			double smallerDivision = Double.MAX_VALUE;
 			
+			//Find the smallest division between each element of the chosen col and the free elements col
 			for (int i = 1; i < table.cells.length; i++) {
 					if (table.cells[i][col].topSubcell.getValue() != 0) {
 
@@ -142,6 +161,8 @@ public class SimplexWetzel {
 				
 				
 			}
+			
+			//Call the swap algorithm
 			return swap();
 			
 		}
@@ -152,17 +173,24 @@ public class SimplexWetzel {
 	
 	private SolutionResponse swap() {
 		
+		// set the inverse of the chosen element
 		double inverseElement = 1 / table.cells[table.selectedRow][table.selectedCol].topSubcell.getValue();
+		
+		// set the bottom subcell with the inverse element
 		table.cells[table.selectedRow][table.selectedCol].bottomSubcell.setValue(inverseElement);
-		table.cells[table.selectedRow][table.selectedCol].bottomSubcell.setValue(inverseElement);
+
+		// set the elements of the chosen row with the of the top subcell element and the inverse element
 		for (int i = 0; i < table.cells[0].length; i++) {
+			//ignore the chosen element
 			if (i == table.selectedCol)
 				continue;
 			double topElement = table.cells[table.selectedRow][i].topSubcell.getValue();
 			table.cells[table.selectedRow][i].bottomSubcell.setValue(topElement*inverseElement);
 		}
 		
+		// set the elements of the chosen col with the of the top subcell element and the inverse element multiplied by -1
 		for (int i = 0; i < table.cells.length; i++) {
+			//ignore the chosen element
 			if (i == table.selectedRow)
 				continue;
 			double topElement = table.cells[i][table.selectedCol].topSubcell.getValue();
