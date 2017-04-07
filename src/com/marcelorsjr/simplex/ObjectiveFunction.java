@@ -1,3 +1,4 @@
+package com.marcelorsjr.simplex;
 
 
 public class ObjectiveFunction {

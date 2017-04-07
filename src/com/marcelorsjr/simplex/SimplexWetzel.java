@@ -1,19 +1,34 @@
+package com.marcelorsjr.simplex;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.DoubleStream;
+
+import com.marcelorsjr.simplex.ObjectiveFunction.Type;
+
+
 public class SimplexWetzel {
 	
+	public enum SolutionResponse {
+		OPTIMAL_SOLUTION, UNLIMITED_SOLUTION, PERMISSIVE_SOLUTION_DOES_NOT_EXIST
+	}
+	
 	private Table table;
-	private Restriction[] restrictions;
-	private ObjectiveFunction of;
+	Restriction[] restrictions;
+	ObjectiveFunction of;
+	SolutionResponse solutionResponse;
 	
 	public SimplexWetzel(Restriction[] restrictions, ObjectiveFunction of) {
 		this.restrictions = restrictions;
 		this.of = of;
 		table = new Table(restrictions.length, of.getCoefficients().length);
+		
 	}
 	
-	public void solve() {
-		fillFieldsWithCoefficients();
-		firstPhase();
+	public void printSolution() {		
 		
+
 	
 		if (of.getType() == ObjectiveFunction.Type.MAXIMIZATION) {
 			System.out.println("FO(x) -> MAX Z = "+Math.abs(table.cells[0][0].topSubcell.getValue()));
@@ -27,13 +42,32 @@ public class SimplexWetzel {
 		for (int i = 0; i < results.length; i++)
 			System.out.println("x"+(i+1)+" = "+results[i]);
 		
+		System.out.println();
+		
 		for (int i = 0 ; i<restrictions.length; i++) 
 			System.out.println("x"+(i+1+results.length)+" = "+restrictions[i].solveEquationWithBasicVariablesValues(results));
 	
 	}
 	
+	public double[] solve() {
+		fillFieldsWithCoefficients();
+		firstPhase();
+		
+		table.showTable();
+		table.showBasic();
+		table.showNoBasic();
+
+		double results[] = getResultsForObjectiveFunction();
+		double response[] = new double[results.length + 1];
+		response[0] = Math.abs(table.cells[0][0].topSubcell.getValue());
+		for (int i = 1; i < response.length; i++)
+			response[i] = results[i-1];
+		
+		return response;
+		
+	}
 	
-	private void fillFieldsWithCoefficients() {
+	void fillFieldsWithCoefficients() {
 		
 		table.cells[0][0].topSubcell.setValue(of.getFreeElement());
 		for (int i = 1; i < table.cells.length; i++) {
@@ -51,28 +85,35 @@ public class SimplexWetzel {
 		}
 	}
 	
-	private void firstPhase() {
-		int col;
-		int row;
-		for (row = 1; row < table.cells.length; row++) {
+	SolutionResponse firstPhase() {
+		int col = 1;
+		int row = 1;
+		
+		while (row < table.cells.length && col < table.cells[0].length) {
 			if (table.cells[row][0].topSubcell.getValue() < 0) {
-				break;
+				if (table.cells[row][col].topSubcell.getValue() < 0) {
+					break;
+				} else {
+					col++;
+				}
+			} else {
+				col = 1;
+				row++;
 			}
+			
+		
 		}
 		
+
+		
 		if (row == table.cells.length) {
-			secondPhase();
+			return secondPhase();
 		} else {
 			
-			for (col = 1; col < table.cells[row].length; col++) {
-					if (table.cells[row][col].topSubcell.getValue() < 0) {
-						break;
-					}
-				
-			}
 			if (col == table.cells[row].length) {
 				System.out.println("Solução permissiva não existe.");
-				return;
+				solutionResponse = SolutionResponse.PERMISSIVE_SOLUTION_DOES_NOT_EXIST;
+				return SolutionResponse.PERMISSIVE_SOLUTION_DOES_NOT_EXIST;
 			}
 			
 			table.selectedCol = col;
@@ -83,9 +124,9 @@ public class SimplexWetzel {
 			for (int i = 1; i < table.cells.length; i++) {
 					if (table.cells[i][col].topSubcell.getValue() != 0) {
 
-						if (table.cells[i][0].topSubcell.getValue() > 0 && table.cells[i][col].topSubcell.getValue() > 0) {
+						if (table.cells[i][0].topSubcell.getValue() >= 0 && table.cells[i][col].topSubcell.getValue() > 0) {
 							division = table.cells[i][0].topSubcell.getValue()/table.cells[i][col].topSubcell.getValue();
-						} else if (table.cells[i][0].topSubcell.getValue() < 0 && table.cells[i][col].topSubcell.getValue() < 0) {
+						} else if (table.cells[i][0].topSubcell.getValue() <= 0 && table.cells[i][col].topSubcell.getValue() < 0) {
 							division = table.cells[i][0].topSubcell.getValue()/table.cells[i][col].topSubcell.getValue();
 						} else {
 							division = Double.MAX_VALUE;
@@ -101,7 +142,7 @@ public class SimplexWetzel {
 				
 				
 			}
-			swap();
+			return swap();
 			
 		}
 		
@@ -109,7 +150,7 @@ public class SimplexWetzel {
 		
 	}
 	
-	private void swap() {
+	private SolutionResponse swap() {
 		
 		double inverseElement = 1 / table.cells[table.selectedRow][table.selectedCol].topSubcell.getValue();
 		table.cells[table.selectedRow][table.selectedCol].bottomSubcell.setValue(inverseElement);
@@ -163,12 +204,12 @@ public class SimplexWetzel {
 		}
 		
 		table = table2;
-		firstPhase();
+		return firstPhase();
 		
 		
 	}
 	
-	private void secondPhase() {
+	private SolutionResponse secondPhase() {
 		int row;
 		int col;
 		for (col = 1; col < table.cells[0].length; col++) {
@@ -179,7 +220,8 @@ public class SimplexWetzel {
 		
 		if (col == table.cells[0].length) {
 			System.out.println("********** OPTIMAL SOLUTION FOUND **********\n");
-			return;
+			solutionResponse = SolutionResponse.OPTIMAL_SOLUTION;
+			return SolutionResponse.OPTIMAL_SOLUTION;
 		}
 		
 		table.selectedCol = col;
@@ -191,7 +233,8 @@ public class SimplexWetzel {
 		
 		if (row == table.cells.length) {
 			System.out.println("********** UNLIMITED SOLUTION **********\n");
-			return;
+			solutionResponse = SolutionResponse.UNLIMITED_SOLUTION;
+			return SolutionResponse.UNLIMITED_SOLUTION;
 		}
 		
 		double division = 0;
@@ -199,9 +242,9 @@ public class SimplexWetzel {
 		
 		for (int i = 1; i < table.cells.length; i++) {
 				if (table.cells[i][col].topSubcell.getValue() != 0) {
-					if (table.cells[i][0].topSubcell.getValue() > 0 && table.cells[i][col].topSubcell.getValue() > 0) {
+					if (table.cells[i][0].topSubcell.getValue() >= 0 && table.cells[i][col].topSubcell.getValue() > 0) {
 						division = table.cells[i][0].topSubcell.getValue()/table.cells[i][col].topSubcell.getValue();
-					} else if (table.cells[i][0].topSubcell.getValue() < 0 && table.cells[i][col].topSubcell.getValue() < 0) {
+					} else if (table.cells[i][0].topSubcell.getValue() <= 0 && table.cells[i][col].topSubcell.getValue() < 0) {
 						division = table.cells[i][0].topSubcell.getValue()/table.cells[i][col].topSubcell.getValue();
 					} else {
 						continue;
@@ -216,11 +259,12 @@ public class SimplexWetzel {
 			
 		}
 
-		swap();	
+		return swap();	
 		
 	}
 	
-	private double[] getResultsForObjectiveFunction() {
+	double[] getResultsForObjectiveFunction() {
+		
 		
 		double results[] = new double[of.getCoefficients().length];
 		for (int i = 0; i < of.getCoefficients().length; i++) {

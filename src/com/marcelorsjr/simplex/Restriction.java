@@ -1,3 +1,4 @@
+package com.marcelorsjr.simplex;
 
 
 import java.util.Arrays;
@@ -44,13 +45,14 @@ public class Restriction {
 		Arrays.fill(coefficients, 0);
 		
 		for (int i = 0; i < allCoefficients.length; i++) {
+			
 			String[] portions = allCoefficients[i].split("(x)|(X)");
 			
 			try {
 
 				freeElement += Double.parseDouble(allCoefficients[i]);
-				System.out.println(allCoefficients[i]);
-				System.out.println(freeElement);
+				//System.out.println(allCoefficients[i]);
+				//System.out.println(freeElement);
 			} catch(NumberFormatException e) {
 				if (allCoefficients[i].toLowerCase().equals("x")) {
 					continue;
@@ -63,7 +65,7 @@ public class Restriction {
 				} else {
 					throw new Exception("WRONG EXPRESSION FORMAT");
 				}
-
+				
 				if (portions[0].equals("")) {
 					coefficients[Integer.valueOf(portions[1])-1] += 1;
 
@@ -80,7 +82,7 @@ public class Restriction {
 	
 	private void setExpressionSignals() {
 		int portionCount = 1;
-		
+
 		String function = equivalentEquation.replaceAll("\\s{2,}", " ").trim();
 		String[] portions = function.split(" ");
 		for (int i = 0; i < portions.length; i++) {
@@ -95,7 +97,9 @@ public class Restriction {
 					portionCount++;
 					continue;
 				}
-				coefficients[portionCount] *= -1;
+				if (!portions[i+1].toLowerCase().equals("x")) {
+					coefficients[portionCount] *= -1;
+				}
 				portionCount++;
 			}
 		}
