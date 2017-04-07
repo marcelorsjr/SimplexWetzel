@@ -40,25 +40,50 @@ This is the number of terms contained in the objective function
 ### Example
 
 ```java
-ObjectiveFunction of = new ObjectiveFunction("MIN x1 + 2x2");
-Restriction[] r = new Restriction[3];
-r[0] = new Restriction("8x1 + 2x2 >= 16", of.getCoefficients().lenght);
-r[1] = new Restriction("x1 + x2 <= 6", of.getCoefficients().lenght);
-r[2] = new Restriction("2x1 + 7x2 >= 28", of.getCoefficients().lenght);
+ObjectiveFunction of = new ObjectiveFunction("MAX 21x1 + 11x2");
+Restriction[] r = new Restriction[1];
+r[0] = new Restriction("7x1 + 4x2 <= 13", 2);
 		
 SimplexWetzel simplex = new SimplexWetzel(r, of);
 simplex.solve();
+simplex.printSolution();
 ```
 
 Example results:
 ```
 ********** OPTIMAL SOLUTION FOUND **********
 
-FO(x) -> MIN Z = 8.461538461538462
-x1 = 1.0769230769230775
-x2 = 3.6923076923076925
-x3 = 5.329070518200751E-15
-x4 = 1.23076923076923
-x5 = 0.0
+FO(x) -> MAX Z = 39.0
+x1 = 1.857142857142857
+x2 = 0.0
+x3 = 1.7763568394002505E-15
+```
+
+## Usage for Integer Linear Programming (ILP) problems
+
+This solution was implemented by a branch and bound approach. An integer programming problem is a mathematical optimization or feasibility program in which some or all of the variables are restricted to be integers.
+
+Running is very simple, you just have to call the "SimplexWetzelInteger" like the code below.
+
+### Example
+
+```java
+ObjectiveFunction of = new ObjectiveFunction("MAX 21x1 + 11x2");
+Restriction[] r = new Restriction[1];
+r[0] = new Restriction("7x1 + 4x2 <= 13", 2);
+
+SimplexWetzelInteger si = new SimplexWetzelInteger(r, of);
+si.solve();
+si.printSolution();
+```
+
+Example results:
+```
+********** OPTIMAL SOLUTION FOUND **********
+
+FO(x) -> MAX Z = 33.0
+x1 = 33.0
+x2 = 0.0
+x3 = 3.0
 ```
 
