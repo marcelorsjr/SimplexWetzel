@@ -26,8 +26,17 @@ public class Restriction {
 		handleRestrictionToSimplex();
 	}
 	
+	/**
+	 * @throws Exception
+	 * 
+	 * Method for handling the typed inequation
+	 * It extract the coefficients and the free element of the expression,
+	 * preparing it to the simplex calculus
+	 * 
+	 */
 	private void setCoefficientsFromTypedInequation() throws Exception {
 
+		// Transform the inequation to an equation, adding or subtracting constants to mantain the proportion
 		if (typedInequation.contains("<=")) {
 			equivalentEquation = typedInequation.replace("<=", "+ x =");
 			type = Type.LESS_THAN_EQUAL;
@@ -37,27 +46,35 @@ public class Restriction {
 		} else {
 			throw new Exception("WRONG EXPRESSION FORMAT");
 		}
+		
+		// Remove the spaces to start the "parsing"
 		String function = equivalentEquation.replace(" ", "");
+		
+		// Split the expression to extract the coefficients
 		String[] allCoefficients = function.split("(\\-)|(\\+)|(=)");
 		coefficients = new double[size];
 		freeElement = 0;
 
 		Arrays.fill(coefficients, 0);
 		
+		// Iterate over the splitted expression
 		for (int i = 0; i < allCoefficients.length; i++) {
 			
+			// Split the elements found by X to get only the number part
 			String[] portions = allCoefficients[i].split("(x)|(X)");
 			
 			try {
-
+				// Try to parse the total element as a double, to know if it is a free element in the expression
 				freeElement += Double.parseDouble(allCoefficients[i]);
-				//System.out.println(allCoefficients[i]);
-				//System.out.println(freeElement);
 			} catch(NumberFormatException e) {
+				
+				// If the element is just an "x" it skip the iteration
+				// This is the element inserted to transform the inequation to a equation
 				if (allCoefficients[i].toLowerCase().equals("x")) {
 					continue;
 				}
 				
+				// Just verifying if the expression was typed correct 
 				if (portions.length > 1) {
 					if (allCoefficients.length == 1) {
 						throw new Exception("WRONG EXPRESSION FORMAT");
@@ -66,10 +83,12 @@ public class Restriction {
 					throw new Exception("WRONG EXPRESSION FORMAT");
 				}
 				
+				
 				if (portions[0].equals("")) {
+					// If the left side of the X is empty, the coefficient is set to  1
 					coefficients[Integer.valueOf(portions[1])-1] += 1;
-
 				} else {
+					// If not, it get the constant read
 					coefficients[Integer.valueOf(portions[1])-1] += Double.parseDouble(portions[0]);
 				}
 
@@ -80,6 +99,13 @@ public class Restriction {
 
 	}
 	
+	
+	/**
+	 * 
+	 * Method for handling the expression signals
+	 * The signals are "lost" when handling the expression
+	 * 
+	 */
 	private void setExpressionSignals() {
 		int portionCount = 1;
 
@@ -106,6 +132,13 @@ public class Restriction {
 		
 	}
 	
+	/**
+	 * 
+	 * Method for handling the typed inequation signals to the simplex calc
+	 * It multiply the coefficients based on the type of the current expression
+	 * (GREATHER_THAN_EQUAL / LESS_THAN_EQUAL)
+	 * 
+	 */
 	private void handleRestrictionToSimplex() {
 		if (type == Type.GREATER_THAN_EQUAL) {
 			freeElement *= -1;
@@ -115,19 +148,20 @@ public class Restriction {
 		}
 	}
 	
+	/**
+	 * 
+	 * Method for solving the equation based on the basic variables values
+	 * 
+	 */
 	public double solveEquationWithBasicVariablesValues(double values[]) {
 		
 		double result = 0.0;
-
 		result = freeElement;
-
-
 		
 		for (int i = 0; i < coefficients.length; i++) {
 			result = result - coefficients[i]*values[i];
 		}
-		
-		
+	
 		return result;
 	}
 

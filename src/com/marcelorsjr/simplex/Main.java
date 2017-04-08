@@ -10,11 +10,13 @@ public class Main {
 		Restriction[] r = new Restriction[1];
 		r[0] = new Restriction("7x1 + 4x2 <= 13", 2);
 		
-		SimplexWetzelInteger si = new SimplexWetzelInteger(r, of);
-		si.solve();
-		si.printSolution();
-//		
-
+		SimplexWetzel sw = new SimplexWetzel(r, of);
+		sw.solve();
+		sw.printSolution();
+		
+//		SimplexWetzelInteger si = new SimplexWetzelInteger(r, of);
+//		si.solve();
+//		si.printSolution();
 
 	}
 

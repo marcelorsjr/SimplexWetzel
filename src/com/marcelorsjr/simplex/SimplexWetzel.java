@@ -36,8 +36,6 @@ public class SimplexWetzel {
 	
 	public void printSolution() {		
 		
-
-	
 		if (of.getType() == ObjectiveFunction.Type.MAXIMIZATION) {
 			System.out.println("FO(x) -> MAX Z = "+Math.abs(table.cells[0][0].topSubcell.getValue()));
 		} else {
@@ -97,7 +95,7 @@ public class SimplexWetzel {
 	
 	SolutionResponse firstPhase() {
 		
-		//Start sear
+		//Start sea
 		int col = 1;
 		int row = 1;
 		
@@ -188,7 +186,7 @@ public class SimplexWetzel {
 			table.cells[table.selectedRow][i].bottomSubcell.setValue(topElement*inverseElement);
 		}
 		
-		// set the elements of the chosen col with the of the top subcell element and the inverse element multiplied by -1
+		// set the elements of the chosen col with the product of the top subcell element and the inverse element multiplied by -1
 		for (int i = 0; i < table.cells.length; i++) {
 			//ignore the chosen element
 			if (i == table.selectedRow)
@@ -197,6 +195,9 @@ public class SimplexWetzel {
 			table.cells[i][table.selectedCol].bottomSubcell.setValue(topElement*(-inverseElement));
 		}
 		
+		// set the elements of the other top subcells with the product of the top subcell
+		// of the cell in the selected row at the current col
+		// and the bottom subcell of the cell in the selecteed col at the current row.
 		for (int i = 0; i < table.cells.length; i++) {
 			for (int j = 0; j < table.cells[0].length; j++) {
 				if (i != table.selectedRow && j != table.selectedCol) {
@@ -209,29 +210,38 @@ public class SimplexWetzel {
 			}
 		}
 		
+		// Create a aux table to make the "swap" and continue with the algorithm with the new table
 		Table table2 = new Table(restrictions.length, of.getCoefficients().length);
 		
 		table2.basicVariables = table.basicVariables;
 		table2.nonBasicVariables = table.nonBasicVariables;
 		
+		// Swap the variables of the selected col and row
 		int swap = table2.basicVariables[table.selectedRow-1];
 		table2.basicVariables[table.selectedRow-1] = table2.nonBasicVariables[table.selectedCol-1];
 		table2.nonBasicVariables[table.selectedCol-1] = swap;
 		
+		
+		// Fill the other top subcells of the table
 		for (int i = 0; i < table.cells.length; i++) {
 			for (int j = 0; j < table.cells[0].length; j++) {
 				double bottomSubCell = table.cells[i][j].bottomSubcell.getValue();
+				
 				if (i != table.selectedRow && j != table.selectedCol) {
-					
+					// Set the top subcell of the other cells with the addition of the elements in the previous table
 					double topSubCell = table.cells[i][j].topSubcell.getValue();
 					table2.cells[i][j].topSubcell.setValue(topSubCell+bottomSubCell);
 				} else {
+					// Set the top subcell of the selected col and selected rows elements with the element in the bottom sub cell of the previous table
 					table2.cells[i][j].topSubcell.setValue(bottomSubCell);
 				}
 			}
 		}
 		
+		// Copy the aux table to the main
 		table = table2;
+		
+		// Call the firstphase again
 		return firstPhase();
 		
 		
@@ -240,25 +250,33 @@ public class SimplexWetzel {
 	private SolutionResponse secondPhase() {
 		int row;
 		int col;
+		
+		//Search for the positive element in the non basic variables row
 		for (col = 1; col < table.cells[0].length; col++) {
 			if (table.cells[0][col].topSubcell.getValue() > 0) {
 				break;
 			}
 		}
 		
+		// If the positive element does not exists in the non basic variables row
+		// The optimal solution was found
 		if (col == table.cells[0].length) {
 			System.out.println("********** OPTIMAL SOLUTION FOUND **********\n");
 			solutionResponse = SolutionResponse.OPTIMAL_SOLUTION;
 			return SolutionResponse.OPTIMAL_SOLUTION;
 		}
 		
+		// Set the col of the selected positive element as selected col
 		table.selectedCol = col;
+		
+		//Search for the positive element in the selected col
 		for (row = 1; row < table.cells.length; row++) {
 			if (table.cells[row][col].topSubcell.getValue() > 0) {
 				break;
 			}
 		}
 		
+		// If the positive element does not exists, the solution is unlimited
 		if (row == table.cells.length) {
 			System.out.println("********** UNLIMITED SOLUTION **********\n");
 			solutionResponse = SolutionResponse.UNLIMITED_SOLUTION;
@@ -268,6 +286,7 @@ public class SimplexWetzel {
 		double division = 0;
 		double smallerDivision = Double.MAX_VALUE;
 		
+		//Find the smallest division between each element of the chosen col and the free elements col
 		for (int i = 1; i < table.cells.length; i++) {
 				if (table.cells[i][col].topSubcell.getValue() != 0) {
 					if (table.cells[i][0].topSubcell.getValue() >= 0 && table.cells[i][col].topSubcell.getValue() > 0) {

@@ -5,7 +5,7 @@ import com.marcelorsjr.simplex.ObjectiveFunction.Type;
 
 public class Node {
 	
-	public enum PrumedReason {
+	public enum PrunedReason {
 		INFEASIBLE, OPTIMALITY, QUALITY
 	}
 	
@@ -15,14 +15,14 @@ public class Node {
 	public Node left;
 	public double solution;
 	public double results[];
-	public boolean prumed;
-	public PrumedReason prumedReason;
+	public boolean pruned;
+	public PrunedReason prunedReason;
 	
 	public Node() {
 		this.right = null;
 		this.left = null;
 		this.restrictions = null;
-		prumedReason = null;
+		prunedReason = null;
 		solution = Double.MIN_VALUE;
 	}
 	
@@ -30,7 +30,7 @@ public class Node {
 		this.right = null;
 		this.left = null;
 		this.restrictions = restrictions.clone();
-		prumedReason = null;
+		prunedReason = null;
 		solution = Double.MIN_VALUE;
 	}
 	

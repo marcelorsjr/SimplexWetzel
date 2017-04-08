@@ -15,7 +15,6 @@ public class ObjectiveFunction {
 	
 	public ObjectiveFunction(String typedObjectiveFunction) {
 		this.typedObjectiveFunction = typedObjectiveFunction;
-		this.type = type;
 		try {
 			setType();
 			setCoefficientsFromTypedObjectiveFunction();
@@ -29,7 +28,14 @@ public class ObjectiveFunction {
 
 	}
 
+	/**
+	 * @throws Exception
+	 * 
+	 * Method for set the type of the written expression
+	 * 
+	 */
 	private void setType() throws Exception {
+		// Split the expression by a space and then check the first element (max or min)
 		String[] functionType = typedObjectiveFunction.split(" ");
 		if (functionType[0].toLowerCase().equals("max")) {
 			this.type = Type.MAXIMIZATION;
@@ -43,8 +49,19 @@ public class ObjectiveFunction {
 		
 	}
 	
+	/**
+	 * @throws Exception
+	 * 
+	 * Method for handling the typed expression
+	 * It extract the coefficients and the free element of the expression,
+	 * preparing it to the simplex calculus
+	 * 
+	 */
 	private void setCoefficientsFromTypedObjectiveFunction() throws Exception {
+		// Remove the spaces to start the "parsing"
 		String function = typedObjectiveFunction.replace(" ", "");
+		
+		// Split the expression to extract the coefficients
 		String[] allCoefficients = function.split("(\\-)|(\\+)");
 		coefficients = new double[allCoefficients.length];
 		freeElement = 0;
@@ -54,12 +71,15 @@ public class ObjectiveFunction {
 				if (allCoefficients.length == 1) {
 					throw new Exception("WRONG EXPRESSION FORMAT");
 				} else if (portions[0].equals("")) {
+					// If the left side of the X is empty, the coefficient is set to  1
 					coefficients[i] = 1;
 				} else {
+					// If not, it get the constant read
 					coefficients[i] = Double.parseDouble(portions[0]);
 				}
 			} else {
 				try {
+					// Try to parse the element as a double, to know if it is a free element in the expression
 					freeElement = Double.parseDouble(portions[0]);
 				} catch (NumberFormatException e) {
 					throw new Exception("WRONG EXPRESSION FORMAT");
@@ -68,6 +88,12 @@ public class ObjectiveFunction {
 		}
 	}
 	
+	/**
+	 * 
+	 * Method for handling the expression signals
+	 * The signals are "lost" when handling the expression
+	 * 
+	 */
 	private void setExpressionSignals() {
 		int portionCount = 0;
 		
@@ -84,6 +110,13 @@ public class ObjectiveFunction {
 		
 	}
 	
+	/**
+	 * 
+	 * Method for handling the typed inequation signals to the simplex calc
+	 * It multiply the coefficients based on the type of the current expression
+	 * (MINIMAZTION / MAXIMIZATION)
+	 * 
+	 */
 	private void handleObjectiveFunctionToSimplex() {
 		if (type == Type.MINIMIZATION) {
 			for (int i = 0; i < coefficients.length; i++) {
