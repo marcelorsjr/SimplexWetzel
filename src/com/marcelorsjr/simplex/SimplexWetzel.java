@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.DoubleStream;
 
 import com.marcelorsjr.simplex.ObjectiveFunction.Type;
+import com.marcelorsjr.simplex.SimplexWetzel.SolutionResponse;
 
 
 /**
@@ -19,8 +20,9 @@ public class SimplexWetzel {
 	 * Possible solutions that cam be shown
 	 */
 	public enum SolutionResponse {
-		OPTIMAL_SOLUTION, UNLIMITED_SOLUTION, PERMISSIVE_SOLUTION_DOES_NOT_EXIST
+		OPTIMAL_SOLUTION, UNLIMITED_SOLUTION, PERMISSIVE_SOLUTION_DOES_NOT_EXIST, MULTIPLE_SOLUTIONS
 	}
+	
 	
 	private Table table;
 	Restriction[] restrictions;
@@ -251,19 +253,30 @@ public class SimplexWetzel {
 		int row;
 		int col;
 		
+		boolean foundZero = false;
+		
 		//Search for the positive element in the non basic variables row
 		for (col = 1; col < table.cells[0].length; col++) {
 			if (table.cells[0][col].topSubcell.getValue() > 0) {
 				break;
+			} else if (table.cells[0][col].topSubcell.getValue() == 0) {
+				//Just for check if it generate multiple solutions
+				foundZero = true;
 			}
 		}
 		
 		// If the positive element does not exists in the non basic variables row
 		// The optimal solution was found
 		if (col == table.cells[0].length) {
+			if (foundZero) {
+				System.out.println("MULTIPLE SOLUTIONS\n");
+				solutionResponse = SolutionResponse.MULTIPLE_SOLUTIONS;
+				return SolutionResponse.MULTIPLE_SOLUTIONS;
+			} else {
 			System.out.println("********** OPTIMAL SOLUTION FOUND **********\n");
 			solutionResponse = SolutionResponse.OPTIMAL_SOLUTION;
 			return SolutionResponse.OPTIMAL_SOLUTION;
+			}
 		}
 		
 		// Set the col of the selected positive element as selected col
