@@ -198,7 +198,14 @@ public class SimplexWetzelInteger {
 			
 			// Already got the best integer solutions
 			tree.bestNode.solution = solution;
-			tree.bestNode.results = variablesValues.clone();
+			
+			double resultsAux[] = new double[variablesValues.length+1];
+			resultsAux[0] = solution;
+			for (int i = 1; i < resultsAux.length; i++) {
+				resultsAux[i] = variablesValues[i-1];
+			}
+			
+			tree.bestNode.results = resultsAux.clone();
 		}
 		
 		
